@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-app-java-sdk-jwt
+  namespace: bnl-test-app-namespace
+  labels:
+    app: test-app-java-sdk-jwt
+spec:
+  selector:
+    matchLabels:
+      app: test-app-java-sdk-jwt
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: test-app-java-sdk-jwt
+    spec:
+      serviceAccountName: test-app-java-sdk-jwt-sa
+      containers:
+        - name: test-app-java-sdk-jwt
+          image: bnasslahsen/conjur-jwt-java
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: CONJUR_ACCOUNT
+              valueFrom:
+                secretKeyRef:
+                  name: java-sdk-credentials-jwt
+                  key: conjur-account
+            - name: CONJUR_SERVICE_ID
+              valueFrom:
+                secretKeyRef:
+                  name: java-sdk-credentials-jwt
+                  key: conjur-service-id
+            - name: CONJUR_APPLIANCE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: java-sdk-credentials-jwt
+                  key: conjur-appliance-url
+            - name: CONJUR_JWT_TOKEN_PATH
+              valueFrom:
+                secretKeyRef:
+                  name: java-sdk-credentials-jwt
+                  key: conjur-jwt-token-path
+            - name: APP_SECRET_USERNAME
+              value: data/vault/bnl-ocp-safe/Database-MySQL-OCPCCSITE1/username
+            - name: APP_SECRET_PASSWORD
+              value: data/vault/bnl-ocp-safe/Database-MySQL-OCPCCSITE1/password
+          volumeMounts:
+            - name: jwt-token
+              mountPath: /var/run/secrets/tokens
+      volumes:
+        - name: jwt-token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  path: jwt
+                  expirationSeconds: 6000
+                  audience: conjur
+
