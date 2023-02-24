@@ -29,13 +29,8 @@ public class MainJWT {
 		SpringApplication.run(MainJWT.class, args);
 		ApiClient conjurClient = Configuration.getDefaultApiClient();
 		AccessToken accessToken = getJwtAccessToken(conjurClient);
-		if (accessToken == null) {
-			System.err.println("Access token is null, Please enter proper environment variables.");
-		}
-		else {
-			String token = accessToken.getHeaderValue();
-			conjurClient.setAccessToken(token);
-		}
+		String token = accessToken.getHeaderValue();
+		conjurClient.setAccessToken(token);
 
 		try {
 			SecretsApi secretsApi = new SecretsApi();
@@ -56,7 +51,7 @@ public class MainJWT {
 	private static AccessToken getJwtAccessToken(ApiClient conjurClient) throws IOException {
 		AuthenticationApi apiInstance = new AuthenticationApi(conjurClient);
 		String xRequestId = UUID.randomUUID().toString();
-		String jwtTokenPath =  System.getenv("CONJUR_JWT_TOKEN_PATH");
+		String jwtTokenPath = System.getenv("CONJUR_JWT_TOKEN_PATH");
 		String jwt = new String(Files.readAllBytes(Paths.get(jwtTokenPath)));
 		try {
 			String accessTokenStr = apiInstance.getAccessTokenViaJWT(conjurClient.getAccount(), System.getenv("CONJUR_SERVICE_ID"), xRequestId, jwt);
